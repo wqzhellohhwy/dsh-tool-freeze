@@ -155,3 +155,21 @@ package.json        包声明（dsh.bundle.patch 指向 cordis.patch.yml）
 cordis.patch.yml    bundle 层：把本插件插进 profile 组合
 lib/index.js        全部实现（无构建步骤，纯 ESM）
 ```
+
+---
+
+## 八、实现注记：清单的数据源比想象中难取（两次踩坑）
+
+第 2 条机制要把"此刻真正可用"报给模型，这个数据源取错了两次，症状都是**误报**：
+
+| 取法 | 症状（实测） |
+|---|---|
+| `ctx.tools.schemas(undefined)` | 那是**全局层视角**，看不到 agent / preset 作用域注册的工具 → `read` / `write` / `pwsh` / `edit` / `glob` 等基础工具被**整批误报成"已停用"**（实测清单显示"可用 186 个，全是 MCP/插件工具；已停用 39 个，含 read/write/pwsh"） |
+| `ctx.tools.schemas(context.scope)` | desktop 上**仍漏报** MCP 工具（`mcp__*`）与 `tmpprofile_*` —— 因为 `assemble` 的 `tools` 还包含 `toolProviders` 的动态贡献，与注册表静态视图**并不等价** |
+| **`system-prompt/assemble` 的输出**（最终采用） | 唯一可信来源。另需：按 agent 分别记录，且**只增不减**（同一个 agent 的 assemble 会被以不同时机调用——MCP 注入是异步的、枚举工具的是另一个 agent——中间态的工具集更小，用小区集覆盖就会漏报） |
+
+另一条时序事实：`section.text(ctx)` 的求值**早于** `system-prompt/assemble` waterfall
+（`dsh-system-prompt` 先求值 sections、再发 waterfall）。所以清单在实际交付的那一轮，
+反映的是"上一次装配"的结果——**差一轮**，对"告知模型"这个用途可以接受。
+
+> 这两处都不影响第 1 条机制（冻结）。冻结一直有效：工具删减场景命中率 8.8% → 92.4%。
