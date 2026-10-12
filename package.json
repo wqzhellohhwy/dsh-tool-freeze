@@ -1,0 +1,17 @@
+{
+  "name": "@local/dsh-tool-freeze",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "把工具声明面「冻结」：工具被注销/停用时，用同名的影子工具顶住注册表，使顶层 tools 声明逐字节不变（KV 缓存前缀不被打断）；同时把「当前真正可用的工具清单」以系统段落形式追加，让模型始终知道哪些工具还在。",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

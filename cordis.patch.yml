@@ -1,0 +1,5 @@
+# @local/dsh-tool-freeze bundle 层：插入工具面冻结插件。
+- insert:
+    - id: dsh-tool-freeze
+      name: '@local/dsh-tool-freeze'
+      config: {}
